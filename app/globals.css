@@ -1,0 +1,670 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   BLUE, WHITE & FIRE
+   ---------------------------------------------------------------------
+   The shop is blue and white, with a centaur wallpaper; the only thing in
+   it that isn't blue is the charcoal. So is the site:
+
+     the wall ...... whitewash + the centaur wallpaper in shop blue
+                     (<ShopBackdrop />, fixed behind every page)
+     the coals ..... red-hot charcoal beds along the dark bands, the menu
+                     and the footer, with glow that breathes
+     the embers .... live sparks on a canvas over everything
+                     (<EmberField />); a click anywhere sends a burst out
+     the grill ..... dark steel with glowing air vents, under photos and
+                     across the top of the footer
+
+   `--heat` (0 → 1) is written to <html> as you scroll: the further down
+   the page, the nearer the grill, the warmer the glow.
+   ===================================================================== */
+
+:root {
+  --heat: 0;
+  /* One strip of coals, reused by every coal bed: dark lumps with red-hot
+     seams and cracks, tiled along the bottom edge. */
+  --coal-strip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='52' viewBox='0 0 220 52'%3E%3Cg fill='%23191310' stroke='%23ff6a1f' stroke-opacity='.85' stroke-width='1.4'%3E%3Cpath d='M-6 52 C-8 30 6 20 22 22 C38 24 44 36 42 52Z'/%3E%3Cpath d='M36 52 C34 26 52 12 72 16 C92 20 96 38 92 52Z'/%3E%3Cpath d='M88 52 C88 34 100 26 116 28 C134 30 138 42 136 52Z'/%3E%3Cpath d='M128 52 C124 22 146 8 168 12 C190 16 194 36 190 52Z'/%3E%3Cpath d='M184 52 C184 32 198 24 212 26 C228 28 230 42 226 52Z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffb35c' stroke-width='1.1' stroke-linecap='round' opacity='.9'%3E%3Cpath d='M56 26 l6 8 -3 7 M70 20 l-2 9 6 5'/%3E%3Cpath d='M152 20 l5 10 -4 6 M170 18 l2 8 7 4'/%3E%3Cpath d='M14 32 l4 7 M108 34 l3 6 5 2 M204 34 l3 7'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: theme("colors.chalk.DEFAULT");
+    /* Decorative roundels sit outside their sections by design; without
+       this they widen the document and the browser zooms out to fit. */
+    overflow-x: clip;
+  }
+
+  body {
+    /* Transparent on purpose: the wallpaper backdrop is the page. */
+    @apply bg-transparent text-ink font-body antialiased;
+  }
+
+  /* Fraunces has plenty of character of its own — it wants tight tracking. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    background: rgba(255, 154, 74, 0.4);
+    color: theme("colors.cobalt.dark");
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid theme("colors.cobalt.DEFAULT");
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* =================================================================
+     THE WALL (components/theme/ShopBackdrop.tsx)
+     ================================================================= */
+  .shop-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .shop-layer {
+    position: absolute;
+    inset: 0;
+  }
+  .shop-wall {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, #ffffff 0%, transparent 70%),
+      linear-gradient(180deg, #fbfdff 0%, #f1f6fc 60%, #e7eff9 100%);
+  }
+  /* The centaur wallpaper, printed faint so it reads as texture. */
+  .shop-wallpaper {
+    color: theme("colors.cobalt.DEFAULT");
+    opacity: 0.085;
+  }
+  /* Warmth coming up off the grill, stronger as you scroll down. */
+  .shop-heat {
+    background: radial-gradient(
+      ellipse 90% 38% at 50% 108%,
+      rgba(255, 110, 40, 0.55) 0%,
+      rgba(224, 82, 27, 0.18) 45%,
+      transparent 75%
+    );
+    opacity: calc(0.22 + var(--heat) * 0.6);
+  }
+
+  /* The live embers (components/theme/EmberField.tsx). Above the content,
+     but never takes a click. */
+  .ember-field {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* =================================================================
+     SECTION SURFACES — veils over the wallpaper, not walls in front of it
+     ================================================================= */
+  .veil-white {
+    background-color: rgba(251, 253, 255, 0.84);
+  }
+
+  /* Pale blue glaze, ruled like a wall of tiles. */
+  .veil-porcelain {
+    background-color: rgba(234, 241, 250, 0.9);
+    background-image:
+      linear-gradient(rgba(29, 79, 145, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(29, 79, 145, 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* Heroes: the wallpaper shows at full strength around the edges and is
+     washed back behind the content. */
+  .hero-wall {
+    position: relative;
+    isolation: isolate;
+  }
+  .hero-wall::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 55% 60% at 50% 45%, rgba(255, 255, 255, 0.8), transparent 75%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255, 140, 60, 0.18), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Dark bands: a bed of red-hot charcoal along the bottom edge, its glow
+     breathing, with live sparks rising off it (EmberField finds these). */
+  .coal-bed {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .coal-bed::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 108%, rgba(255, 120, 40, 0.55), transparent 70%),
+      radial-gradient(ellipse 35% 30% at 12% 104%, rgba(255, 90, 30, 0.4), transparent 70%),
+      radial-gradient(ellipse 35% 30% at 88% 104%, rgba(255, 90, 30, 0.4), transparent 70%);
+    animation: coal-breathe 4.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .coal-bed::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -2px 0;
+    height: 52px;
+    z-index: -1;
+    background-image:
+      var(--coal-strip),
+      linear-gradient(180deg, transparent 0%, rgba(255, 106, 31, 0.55) 70%, rgba(255, 150, 60, 0.7) 100%);
+    background-repeat: repeat-x, no-repeat;
+    background-size: 220px 52px, 100% 100%;
+    background-position: bottom left, bottom;
+    animation: coal-glow 3.1s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* =================================================================
+     TRIMS
+     ================================================================= */
+  /* The Greek key, as painted along the shop's walls. */
+  .key-divider,
+  .key-divider-ember,
+  .key-divider-cobalt {
+    height: 10px;
+    background-repeat: repeat-x;
+    background-size: 40px 10px;
+  }
+  .key-divider {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 0h10v10H0zM10 0h30v3H16v4h24v3H10z' fill='%23ffffff'/%3E%3C/svg%3E");
+  }
+  .key-divider-ember {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 0h10v10H0zM10 0h30v3H16v4h24v3H10z' fill='%23e0521b'/%3E%3C/svg%3E");
+  }
+  .key-divider-cobalt {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 0h10v10H0zM10 0h30v3H16v4h24v3H10z' fill='%231d4f91'/%3E%3C/svg%3E");
+  }
+
+  /* Section kicker, led by a single live spark. */
+  .eyebrow-spark {
+    @apply inline-flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-ember-deep;
+  }
+  .eyebrow-spark::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 40% 40%, #fff1cf, #ff9a4a 45%, #e0521b 80%);
+    box-shadow: 0 0 10px 2px rgba(255, 106, 31, 0.55);
+    animation: spark-pulse 2.4s ease-in-out infinite;
+  }
+
+  /* =================================================================
+     FRAMES & LEDGES
+     ================================================================= */
+  /* A blue-and-white arch around content (components/ornament/ArchFrame). */
+  .arch-frame__opening {
+    position: absolute;
+    inset: 0 0 12px;
+    border: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0 / clamp(70px, 24%, 260px) clamp(70px, 24%, 260px) 0 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.86) 100%);
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.5);
+  }
+  /* Inner reveal — a second, thinner blue line, as painted on a doorway. */
+  .arch-frame__opening::before {
+    content: "";
+    position: absolute;
+    inset: 8px 8px 0;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-bottom: 0;
+    border-radius: inherit;
+  }
+  /* Keystone: a coal set in the crown. */
+  .arch-frame__opening::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -8px;
+    width: 14px;
+    height: 14px;
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 3px;
+    background: radial-gradient(circle at 40% 40%, #ffd28a, #ff7a2e 50%, #b33a12 100%);
+    box-shadow: 0 0 12px 3px rgba(255, 106, 31, 0.5);
+    animation: spark-pulse 3.4s ease-in-out infinite;
+  }
+  .arch-frame__step {
+    position: absolute;
+    inset: auto -10px 0;
+    height: 12px;
+    border-radius: 3px;
+    background: currentColor;
+    opacity: 0.18;
+  }
+
+  /* Photos stand on the grill: a dark steel ledge with the air vents
+     glowing, as on the front of the charcoal box. */
+  .grill-ledge {
+    position: relative;
+    padding-bottom: 1.25rem;
+  }
+  .grill-ledge::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 106%;
+    height: 14px;
+    border-radius: 3px;
+    background:
+      radial-gradient(circle, #ffd28a 0 1.6px, #ff7a2e 2.6px, rgba(224, 82, 27, 0.35) 4px, transparent 5px) 6px 50% / 26px 100% repeat-x,
+      linear-gradient(180deg, #3a3e46 0%, #1a1c21 55%, #0c0d10 100%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 10px 20px -10px rgba(14, 42, 82, 0.6);
+    animation: vent-glow 2.8s ease-in-out infinite;
+  }
+
+  /* =================================================================
+     BUTTONS
+     ================================================================= */
+  /* Primary: a live coal. Charcoal with red-hot seams glowing through;
+     on hover it catches and throws light around it. */
+  .btn-coal {
+    @apply relative inline-flex items-center justify-center overflow-hidden rounded-full px-7 py-3.5 text-sm font-semibold tracking-wide text-white transition-all duration-200;
+    isolation: isolate;
+    background:
+      radial-gradient(60% 90% at 20% 110%, rgba(255, 106, 31, 0.75), transparent 70%),
+      radial-gradient(50% 80% at 85% 115%, rgba(255, 140, 60, 0.6), transparent 70%),
+      linear-gradient(180deg, #2b2e35 0%, #16181d 60%, #0d0e11 100%);
+    box-shadow:
+      0 0 0 1px rgba(255, 106, 31, 0.55) inset,
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 8px 20px -8px rgba(224, 82, 27, 0.65);
+    text-shadow: 0 0 10px rgba(255, 150, 70, 0.45);
+  }
+  .btn-coal::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(100deg, transparent 25%, rgba(255, 170, 90, 0.45) 50%, transparent 75%);
+    transform: translateX(-120%);
+    transition: transform 0.6s ease;
+  }
+  .btn-coal:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 1px rgba(255, 150, 70, 0.9) inset,
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 0 22px 2px rgba(255, 106, 31, 0.55),
+      0 12px 28px -8px rgba(224, 82, 27, 0.8);
+  }
+  .btn-coal:hover::after {
+    transform: translateX(120%);
+  }
+  .btn-coal:active {
+    transform: translateY(0);
+  }
+
+  /* Secondary: blue on white, and white on blue when you reach for it. */
+  .btn-porcelain {
+    @apply relative inline-flex items-center justify-center rounded-full border border-cobalt/35 bg-white px-7 py-3.5 text-sm font-semibold tracking-wide text-cobalt-dark transition-all duration-200;
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 8px 18px -12px rgba(14, 42, 82, 0.5);
+  }
+  .btn-porcelain:hover {
+    @apply border-cobalt bg-cobalt text-white;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px -12px rgba(29, 79, 145, 0.7);
+  }
+  .btn-porcelain:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-cobalt px-6 py-3 text-sm font-semibold tracking-wide text-white transition-colors hover:bg-cobalt-light;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-white/40 px-6 py-3 text-sm font-semibold tracking-wide text-white transition-colors hover:border-ember-light hover:bg-white/10;
+  }
+
+  .btn-outline-dark {
+    @apply inline-flex items-center justify-center rounded-full border border-cobalt/40 px-6 py-3 text-sm font-semibold tracking-wide text-cobalt transition-colors hover:border-cobalt hover:bg-cobalt/5;
+  }
+
+  /* =================================================================
+     CARDS & CONTROLS
+     ================================================================= */
+  /* A glazed tile: white, a blue edge, and a painted inner border. */
+  .tile-card {
+    @apply relative rounded-md border border-cobalt/20;
+    background-color: rgba(255, 255, 255, 0.93);
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 1px 2px rgba(14, 42, 82, 0.06),
+      0 16px 30px -20px rgba(14, 42, 82, 0.45);
+  }
+  .tile-card::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(29, 79, 145, 0.14);
+    border-radius: 0.3rem;
+    pointer-events: none;
+  }
+
+  /* Order builder chips: white tiles; the chosen one is shop blue with a
+     hot rim. */
+  .chip-option {
+    @apply inline-flex items-center rounded-full border border-cobalt/20 bg-white px-4 py-2.5 text-sm font-medium text-ink/80 transition-all duration-150;
+  }
+  .chip-option:hover {
+    @apply border-cobalt/50 bg-porcelain text-cobalt-dark;
+  }
+  .chip-option:active {
+    transform: scale(0.96);
+  }
+  .chip-option--on {
+    @apply border-cobalt bg-cobalt text-white;
+    box-shadow:
+      0 0 0 3px rgba(255, 106, 31, 0.28),
+      0 6px 14px -8px rgba(14, 42, 82, 0.7);
+  }
+  .chip-option--on:hover {
+    @apply bg-cobalt text-white;
+  }
+
+  /* Quantity stepper buttons in the customiser. */
+  .qty-btn {
+    @apply flex h-11 w-11 items-center justify-center rounded-full border border-cobalt/20 bg-white text-xl font-medium text-cobalt-dark transition-all duration-150;
+  }
+  .qty-btn:hover:not(:disabled) {
+    @apply border-cobalt bg-porcelain text-cobalt;
+  }
+  .qty-btn:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  /* Customiser sheet: slides up on mobile, fades in on desktop. */
+  .customiser-sheet {
+    animation: sheet-up 0.26s cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+  @media (min-width: 640px) {
+    .customiser-sheet {
+      animation: sheet-in 0.18s ease-out;
+    }
+  }
+
+  /* "Added ✓" pulse on the product card after adding to the order. */
+  .added-flash {
+    animation: added-pop 0.5s cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+
+  /* Cart badge bump when the order changes. */
+  .cart-bump {
+    animation: cart-bump 0.4s cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+
+  /* =================================================================
+     HEADER, DROPDOWN, NAV
+     ================================================================= */
+  .header-glass {
+    background-color: rgba(251, 253, 255, 0.86);
+    backdrop-filter: blur(12px) saturate(1.2);
+  }
+  /* A blue rule with a hot spot in the middle — the coal under the sign. */
+  .header-glass::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      rgba(29, 79, 145, 0) 0%,
+      rgba(29, 79, 145, 0.6) 20%,
+      rgba(255, 106, 31, 0.9) 50%,
+      rgba(29, 79, 145, 0.6) 80%,
+      rgba(29, 79, 145, 0) 100%
+    );
+  }
+
+  .menu-panel {
+    background-color: rgba(251, 253, 255, 0.96);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 24px 40px -24px rgba(14, 42, 82, 0.5);
+  }
+  /* The full mobile menu: blue-and-white, standing on a bed of live coals
+     that throws sparks up past the links. */
+  .menu-panel--grill {
+    position: relative;
+    isolation: isolate;
+    padding-bottom: 64px;
+  }
+  .menu-panel--grill::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 52px;
+    z-index: -1;
+    background-image:
+      var(--coal-strip),
+      linear-gradient(180deg, rgba(255, 106, 31, 0) 0%, rgba(255, 106, 31, 0.35) 70%, rgba(255, 150, 60, 0.55) 100%),
+      linear-gradient(180deg, transparent 0%, #1a1c21 60%);
+    background-repeat: repeat-x, no-repeat, no-repeat;
+    background-size: 220px 52px, 100% 100%, 100% 100%;
+    background-position: bottom left, bottom, bottom;
+    animation: coal-glow 3.1s ease-in-out infinite;
+  }
+
+  .menu-panel-link {
+    @apply flex items-center justify-between border-b border-cobalt/10 px-2 py-3.5 text-base font-medium text-cobalt-dark transition-all;
+  }
+  .menu-panel-link:hover {
+    @apply text-cobalt;
+    background: linear-gradient(90deg, rgba(29, 79, 145, 0.08), transparent 70%);
+  }
+
+  /* Mobile quick-actions pill. */
+  .quick-dock {
+    background-color: rgba(251, 253, 255, 0.94);
+    border: 1px solid rgba(29, 79, 145, 0.22);
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 10px 28px -10px rgba(14, 42, 82, 0.5);
+    backdrop-filter: blur(12px);
+  }
+
+  /* =================================================================
+     FOOTER — inside the grill
+     ================================================================= */
+  .footer-coals {
+    position: relative;
+    isolation: isolate;
+    background-color: theme("colors.char.DEFAULT");
+    background-image:
+      radial-gradient(ellipse 80% 45% at 50% 105%, rgba(224, 82, 27, 0.45), transparent 70%),
+      linear-gradient(180deg, #1a1c21 0%, #0f1115 55%);
+  }
+  /* The front plate of the grill, its row of vents glowing unevenly. */
+  .footer-grill {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4%;
+    background: linear-gradient(180deg, #3a3e46 0%, #1f2126 60%, #111317 100%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+    pointer-events: none;
+  }
+  .footer-grill span {
+    width: 9px;
+    height: 9px;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 45% 45%, #ffe0a8, #ff7a2e 55%, #b33a12 100%);
+    box-shadow: 0 0 10px 2px rgba(255, 106, 31, 0.55);
+    animation: vent-glow 2.4s ease-in-out infinite;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+}
+
+/* ---------- Fire animations ---------- */
+@keyframes coal-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  35% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes coal-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 5px rgba(255, 106, 31, 0.45)) brightness(1);
+  }
+  40% {
+    filter: drop-shadow(0 0 9px rgba(255, 130, 50, 0.7)) brightness(1.2);
+  }
+  70% {
+    filter: drop-shadow(0 0 4px rgba(255, 106, 31, 0.4)) brightness(0.95);
+  }
+}
+
+@keyframes vent-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  45% {
+    filter: brightness(1.35);
+  }
+  70% {
+    filter: brightness(0.85);
+  }
+}
+
+@keyframes spark-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px 1px rgba(255, 106, 31, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 14px 4px rgba(255, 130, 50, 0.7);
+  }
+}
+
+/* ---------- Order builder animations ---------- */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes added-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes cart-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Respect reduced-motion preferences: the coals still glow, but nothing
+   moves — and EmberField doesn't start at all. */
+@media (prefers-reduced-motion: reduce) {
+  .customiser-sheet,
+  .added-flash,
+  .cart-bump,
+  .coal-bed::before,
+  .coal-bed::after,
+  .menu-panel--grill::after,
+  .grill-ledge::after,
+  .footer-grill span,
+  .eyebrow-spark::before,
+  .arch-frame__opening::after {
+    animation: none;
+  }
+  .chip-option:active,
+  .qty-btn:active:not(:disabled) {
+    transform: none;
+  }
+  .btn-coal::after {
+    display: none;
+  }
+}
