@@ -728,10 +728,14 @@ it that isn't blue is the charcoal. The theme is built from those three:
   canvas above the content (`pointer-events: none`, so it never blocks a
   click). Sparks drift up from the bottom of the screen and from every
   coal bed in view (`.coal-bed`, `.footer-coals`, `.menu-panel--grill`).
-  **A click or tap anywhere sends a burst of embers out from that point.**
-  It pauses in background tabs and doesn't run for reduced-motion users.
-- **The coals** — `.coal-bed` draws a strip of red-hot charcoal along the
-  bottom of the dark bands, with a glow that breathes. The mobile menu
+  The sparks are drawn as tiny hot points with a short motion streak that
+  flicker and cool from white-gold to deep red. **When an order is sent,
+  the "Send Order" button throws a fountain of sparks** (`igniteEmbers` in
+  `lib/embers.ts`; the form holds for ~1.3s so the customer sees it before
+  the confirmation). Clicking elsewhere does nothing. It pauses in background tabs and doesn't run for reduced-motion users.
+- **The coals** — `.coal-bed` lays real glowing charcoal
+  (`public/images/coal-bed.jpg`, cropped so it has no baked-in sparks) along
+  the bottom of the dark bands, with a glow that breathes. The mobile menu
   stands on the same coals.
 - **The grill** — photos stand on `.grill-ledge` (dark steel with glowing
   air vents, like the front of the charcoal box), and the footer's top edge

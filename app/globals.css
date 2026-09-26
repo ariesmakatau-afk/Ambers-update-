@@ -10,10 +10,11 @@
 
      the wall ...... whitewash + the centaur wallpaper in shop blue
                      (<ShopBackdrop />, fixed behind every page)
-     the coals ..... red-hot charcoal beds along the dark bands, the menu
-                     and the footer, with glow that breathes
+     the coals ..... real glowing charcoal along the dark bands and the
+                     menu, with a glow that breathes
      the embers .... live sparks on a canvas over everything
-                     (<EmberField />); a click anywhere sends a burst out
+                     (<EmberField />); sending an order makes the button
+                     throw a fountain of them
      the grill ..... dark steel with glowing air vents, under photos and
                      across the top of the footer
 
@@ -23,9 +24,9 @@
 
 :root {
   --heat: 0;
-  /* One strip of coals, reused by every coal bed: dark lumps with red-hot
-     seams and cracks, tiled along the bottom edge. */
-  --coal-strip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='52' viewBox='0 0 220 52'%3E%3Cg fill='%23191310' stroke='%23ff6a1f' stroke-opacity='.85' stroke-width='1.4'%3E%3Cpath d='M-6 52 C-8 30 6 20 22 22 C38 24 44 36 42 52Z'/%3E%3Cpath d='M36 52 C34 26 52 12 72 16 C92 20 96 38 92 52Z'/%3E%3Cpath d='M88 52 C88 34 100 26 116 28 C134 30 138 42 136 52Z'/%3E%3Cpath d='M128 52 C124 22 146 8 168 12 C190 16 194 36 190 52Z'/%3E%3Cpath d='M184 52 C184 32 198 24 212 26 C228 28 230 42 226 52Z'/%3E%3C/g%3E%3Cg fill='none' stroke='%23ffb35c' stroke-width='1.1' stroke-linecap='round' opacity='.9'%3E%3Cpath d='M56 26 l6 8 -3 7 M70 20 l-2 9 6 5'/%3E%3Cpath d='M152 20 l5 10 -4 6 M170 18 l2 8 7 4'/%3E%3Cpath d='M14 32 l4 7 M108 34 l3 6 5 2 M204 34 l3 7'/%3E%3C/g%3E%3C/svg%3E");
+  /* The coal bed: real charcoal, photographed glowing, cropped to just the
+     coals (no baked-in sparks — the sparks are live, from EmberField). */
+  --coal-photo: url("/images/coal-bed.jpg");
 }
 
 @layer base {
@@ -178,15 +179,12 @@
   .coal-bed::after {
     content: "";
     position: absolute;
-    inset: auto 0 -2px 0;
-    height: 52px;
+    inset: auto 0 0 0;
+    height: 84px;
     z-index: -1;
-    background-image:
-      var(--coal-strip),
-      linear-gradient(180deg, transparent 0%, rgba(255, 106, 31, 0.55) 70%, rgba(255, 150, 60, 0.7) 100%);
-    background-repeat: repeat-x, no-repeat;
-    background-size: 220px 52px, 100% 100%;
-    background-position: bottom left, bottom;
+    background: var(--coal-photo) center 60% / cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 35%, #000 70%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 35%, #000 70%);
     animation: coal-glow 3.1s ease-in-out infinite;
     pointer-events: none;
   }
@@ -477,15 +475,11 @@
     content: "";
     position: absolute;
     inset: auto 0 0 0;
-    height: 52px;
+    height: 60px;
     z-index: -1;
-    background-image:
-      var(--coal-strip),
-      linear-gradient(180deg, rgba(255, 106, 31, 0) 0%, rgba(255, 106, 31, 0.35) 70%, rgba(255, 150, 60, 0.55) 100%),
-      linear-gradient(180deg, transparent 0%, #1a1c21 60%);
-    background-repeat: repeat-x, no-repeat, no-repeat;
-    background-size: 220px 52px, 100% 100%, 100% 100%;
-    background-position: bottom left, bottom, bottom;
+    background: var(--coal-photo) center 55% / cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 55%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 55%);
     animation: coal-glow 3.1s ease-in-out infinite;
   }
 
@@ -565,13 +559,13 @@
 @keyframes coal-glow {
   0%,
   100% {
-    filter: drop-shadow(0 0 5px rgba(255, 106, 31, 0.45)) brightness(1);
+    filter: brightness(1) saturate(1);
   }
   40% {
-    filter: drop-shadow(0 0 9px rgba(255, 130, 50, 0.7)) brightness(1.2);
+    filter: brightness(1.18) saturate(1.1);
   }
   70% {
-    filter: drop-shadow(0 0 4px rgba(255, 106, 31, 0.4)) brightness(0.95);
+    filter: brightness(0.9) saturate(0.95);
   }
 }
 

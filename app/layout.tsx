@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GoogleAnalytics />
         {/* The scene everything else is layered over — see globals.css */}
         <ShopBackdrop />
-        {/* Live embers over everything; a click anywhere stirs the coals */}
+        {/* Live embers over everything (sending an order sets off a fountain) */}
         <EmberField />
         <a
           href="#main-content"

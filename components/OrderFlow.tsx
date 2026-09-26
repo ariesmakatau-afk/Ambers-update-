@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { business } from "@/lib/content";
 import { formatMoney, orderableGroups, type Product } from "@/lib/menu";
 import { trackEvent } from "@/lib/analytics";
+import { igniteEmbers } from "@/lib/embers";
 import ProductCustomiser, { type ConfiguredLine } from "@/components/ProductCustomiser";
 
 type Step = "choose" | "build" | "details" | "sent";
@@ -22,6 +23,8 @@ export default function OrderFlow() {
   const [email, setEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const sendButtonRef = useRef<HTMLButtonElement>(null);
+  const [justSent, setJustSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
 
@@ -93,6 +96,12 @@ export default function OrderFlow() {
       }
       setOrderId(body.orderId ?? null);
       trackEvent({ name: "pickup_order_submitted" });
+      // The order is in: sparks fly off the button that sent it. Hold the
+      // form for a beat so the customer sees it before the confirmation.
+      setJustSent(true);
+      igniteEmbers(sendButtonRef.current);
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      setJustSent(false);
       goToStep("sent");
     } catch (err) {
       setError(
@@ -275,11 +284,12 @@ export default function OrderFlow() {
           )}
 
           <button
+            ref={sendButtonRef}
             type="submit"
-            disabled={submitting}
-            className="btn-coal w-full disabled:opacity-60"
+            disabled={submitting || justSent}
+            className={`btn-coal w-full ${justSent ? "" : "disabled:opacity-60"}`}
           >
-            {submitting ? "Sending order…" : "Send Order"}
+            {justSent ? "Order sent ✓" : submitting ? "Sending order…" : "Send Order"}
           </button>
         </form>
       </div>

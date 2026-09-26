@@ -1,19 +1,31 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { IGNITE_EVENT, type IgniteDetail } from "@/lib/embers";
 
 type Ember = {
   x: number;
   y: number;
+  px: number; // last position, for the motion streak
+  py: number;
   vx: number;
   vy: number;
   life: number; // seconds remaining
   maxLife: number;
-  size: number;
-  phase: number; // for the side-to-side flutter
+  size: number; // core width in px
+  heat: number; // 0–1 starting temperature
+  seed: number; // per-ember offset for turbulence and flicker
 };
 
-const MAX_EMBERS = 700;
+// A pour of sparks from one rectangle over a short time (the order button).
+type Fountain = {
+  left: number;
+  right: number;
+  top: number;
+  remaining: number;
+};
+
+const MAX_EMBERS = 900;
 // The dark bands, the mobile menu and the footer are drawn as coal beds;
 // sparks rise off them.
 const COAL_SELECTOR = ".coal-bed, .footer-coals, .menu-panel--grill";
@@ -23,10 +35,15 @@ const COAL_SELECTOR = ".coal-bed, .footer-coals, .menu-panel--grill";
  *
  * - A few sparks always drift up from the bottom of the screen, more the
  *   further down the page you are (closer to the grill).
- * - Every coal bed on screen (the dark bands, the footer) throws off its own
- *   steady stream from its bottom edge.
- * - Tapping or clicking anywhere stirs the coals: a burst of embers spreads
- *   out from that point and floats away.
+ * - Every coal bed on screen (the dark bands, the menu, the footer) throws
+ *   off its own steady stream from its bottom edge.
+ * - When an order is sent, the button it was sent from pours out a fountain
+ *   of sparks (see `igniteEmbers` in lib/embers.ts). Nothing else on the
+ *   page triggers a burst.
+ *
+ * The sparks are drawn the way real ones photograph: tiny, hot points with
+ * a short motion streak, flickering, cooling from yellow-white to deep red
+ * as they climb, pushed around by the air, and some winking out early.
  *
  * The canvas never takes pointer events, so it can sit above the content
  * without getting in the way of a single click. It pauses when the tab is
@@ -45,21 +62,16 @@ export default function EmberField() {
     if (!ctx) return;
 
     const embers: Ember[] = [];
+    const fountains: Fountain[] = [];
     let width = 0;
     let height = 0;
     let dpr = 1;
     let frame = 0;
     let last = performance.now();
+    let clock = 0;
     let coals: Element[] = [];
     // Fractional spawn carry, so low rates still emit at the right average.
-    const carry = new Map<Element | "floor", number>();
-
-    // Glow sprites, pre-rendered once: white-hot, orange, and cooling red.
-    const sprites = [
-      makeSprite("255,244,214", "255,176,84"),
-      makeSprite("255,184,92", "240,98,30"),
-      makeSprite("240,110,40", "170,40,12"),
-    ];
+    const carry = new Map<unknown, number>();
 
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -74,90 +86,170 @@ export default function EmberField() {
       coals = Array.from(document.querySelectorAll(COAL_SELECTOR));
     }
 
-    function spawn(x: number, y: number, vx: number, vy: number, life: number, size: number) {
+    function spawn(x: number, y: number, vx: number, vy: number, life: number, heat: number) {
       if (embers.length >= MAX_EMBERS) embers.shift();
-      embers.push({ x, y, vx, vy, life, maxLife: life, size, phase: Math.random() * Math.PI * 2 });
+      // Most sparks are pin-pricks; a few are bigger flakes.
+      const size = 0.6 + Math.pow(Math.random(), 3) * 1.6;
+      embers.push({
+        x,
+        y,
+        px: x,
+        py: y,
+        vx,
+        vy,
+        life,
+        maxLife: life,
+        size,
+        heat,
+        seed: Math.random() * 1000,
+      });
     }
 
-    // Emit `rate` embers per second along a horizontal edge.
-    function emitAlong(key: Element | "floor", left: number, right: number, y: number, rate: number, dt: number) {
+    // Emit `rate` sparks per second along a horizontal edge.
+    function emitAlong(
+      key: unknown,
+      left: number,
+      right: number,
+      y: number,
+      rate: number,
+      dt: number,
+      lift: number
+    ) {
       const due = (carry.get(key) ?? 0) + rate * dt;
       const count = Math.floor(due);
       carry.set(key, due - count);
       for (let i = 0; i < count; i++) {
         spawn(
           left + Math.random() * (right - left),
-          y - Math.random() * 12,
-          (Math.random() - 0.5) * 20,
-          -(40 + Math.random() * 90),
-          2 + Math.random() * 3,
-          0.8 + Math.random() * 1.8
+          y - Math.random() * 6,
+          (Math.random() - 0.5) * 30,
+          -(lift * (0.5 + Math.random())),
+          1.6 + Math.random() * 3.2,
+          0.55 + Math.random() * 0.45
         );
       }
     }
 
-    // Stir the coals: a burst from wherever the reader taps.
-    function onPointerDown(e: PointerEvent) {
-      const count = e.pointerType === "touch" ? 34 : 46;
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 60 + Math.random() * 260;
-        spawn(
-          e.clientX,
-          e.clientY,
-          Math.cos(angle) * speed,
-          Math.sin(angle) * speed - 60, // heat lifts the whole burst
-          1.1 + Math.random() * 1.9,
-          1.2 + Math.random() * 2.8
-        );
-      }
+    // An order was sent: pour sparks up off the button for a moment.
+    function onIgnite(e: Event) {
+      const { left, right, top } = (e as CustomEvent<IgniteDetail>).detail;
+      fountains.push({ left, right, top, remaining: 1.6 });
+    }
+
+    function colour(t: number, alpha: number) {
+      // Temperature → colour, like cooling charcoal: white-gold, orange,
+      // then a deep red just before it goes out.
+      const r = t < 0.25 ? Math.round(170 + 340 * t) : 255;
+      const g = Math.round(60 + 190 * Math.pow(t, 1.3));
+      const b = Math.round(10 + 150 * Math.pow(t, 3));
+      return `rgba(${r},${g},${b},${alpha})`;
     }
 
     function tick(now: number) {
       frame = requestAnimationFrame(tick);
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      clock += dt;
 
       const heat = parseFloat(document.documentElement.style.getPropertyValue("--heat")) || 0;
       const narrow = width < 640;
 
       // The floor of the screen: a light, constant drift of sparks.
-      emitAlong("floor", 0, width, height + 8, (narrow ? 3 : 6) + heat * (narrow ? 8 : 16), dt);
+      emitAlong("floor", 0, width, height + 6, (narrow ? 4 : 8) + heat * (narrow ? 8 : 18), dt, 70);
 
       // Each coal bed on screen feeds its own stream.
       for (const el of coals) {
         const r = el.getBoundingClientRect();
         if (r.bottom < 0 || r.top > height) continue;
-        const bottom = Math.min(r.bottom, height + 8);
-        emitAlong(el, r.left, r.right, bottom, r.width / (narrow ? 70 : 110), dt);
+        const bottom = Math.min(r.bottom, height + 6);
+        emitAlong(el, r.left, r.right, bottom, r.width / (narrow ? 40 : 60), dt, 80);
+      }
+
+      // The order button's fountain: heavy at first, then tailing off.
+      for (let i = fountains.length - 1; i >= 0; i--) {
+        const f = fountains[i];
+        f.remaining -= dt;
+        if (f.remaining <= 0) {
+          fountains.splice(i, 1);
+          continue;
+        }
+        const strength = Math.min(1, f.remaining / 1.2);
+        const due = (carry.get(f) ?? 0) + 260 * strength * dt;
+        const count = Math.floor(due);
+        carry.set(f, due - count);
+        for (let n = 0; n < count; n++) {
+          const x = f.left + Math.random() * (f.right - f.left);
+          const spread = (x - (f.left + f.right) / 2) * 0.9;
+          spawn(
+            x,
+            f.top + Math.random() * 8,
+            spread + (Math.random() - 0.5) * 90,
+            -(160 + Math.random() * 280),
+            1 + Math.random() * 1.8,
+            0.55 + Math.random() * 0.35
+          );
+        }
       }
 
       ctx!.clearRect(0, 0, width, height);
       ctx!.globalCompositeOperation = "lighter";
+      ctx!.lineCap = "round";
 
       for (let i = embers.length - 1; i >= 0; i--) {
         const e = embers[i];
         e.life -= dt;
-        if (e.life <= 0 || e.y < -20) {
+        // Some sparks just wink out, as real ones do.
+        if (e.life <= 0 || e.y < -30 || (e.life < e.maxLife * 0.5 && Math.random() < 0.004)) {
           embers.splice(i, 1);
           continue;
         }
-        e.phase += dt * 3;
-        // Buoyancy, drag and a little flutter as the air moves.
-        e.vy -= 24 * dt;
-        e.vx *= 1 - 1.4 * dt;
-        e.vy *= 1 - 0.6 * dt;
-        e.x += (e.vx + Math.sin(e.phase) * 14) * dt;
+
+        // Rising hot air, drag, and smooth turbulence that makes them wander.
+        const gust =
+          Math.sin(e.y * 0.013 + clock * 1.1 + e.seed) * 42 +
+          Math.sin(e.y * 0.041 + clock * 2.3 + e.seed * 1.7) * 18;
+        e.vx += (gust - e.vx) * 1.6 * dt;
+        e.vy -= 30 * dt;
+        e.vy *= 1 - 0.9 * dt;
+        e.px = e.x;
+        e.py = e.y;
+        e.x += e.vx * dt;
         e.y += e.vy * dt;
 
-        const t = e.life / e.maxLife; // 1 → 0 as it cools
-        const sprite = sprites[t > 0.66 ? 0 : t > 0.33 ? 1 : 2];
-        // Embers flicker as they burn out.
-        ctx!.globalAlpha = Math.min(1, t * 1.6) * (0.75 + Math.random() * 0.25);
-        const s = e.size * (1.8 + t * 2);
-        ctx!.drawImage(sprite, e.x - s, e.y - s, s * 2, s * 2);
+        const age = e.life / e.maxLife; // 1 → 0
+        const t = e.heat * (0.35 + 0.65 * age); // cools as it climbs
+        const flicker = 0.55 + 0.45 * Math.sin(clock * 22 + e.seed * 3) * Math.sin(clock * 9 + e.seed);
+        const alpha = Math.min(1, age * 2.2) * (0.6 + 0.4 * flicker);
+
+        // Motion streak: a short line back along its path, like a camera
+        // catching a moving spark.
+        // Capped so fast sparks read as streaks, not lines.
+        let dx = e.x - e.px;
+        let dy = e.y - e.py;
+        const len = Math.hypot(dx, dy) * 1.3;
+        const maxLen = 3 + e.size * 3;
+        if (len > maxLen) {
+          dx *= maxLen / len;
+          dy *= maxLen / len;
+        }
+        const sx = e.x - dx * 1.3;
+        const sy = e.y - dy * 1.3;
+
+        // Faint heat halo, then the hot core.
+        ctx!.strokeStyle = colour(t * 0.8, alpha * 0.18);
+        ctx!.lineWidth = e.size * 4;
+        ctx!.beginPath();
+        ctx!.moveTo(sx, sy);
+        ctx!.lineTo(e.x, e.y);
+        ctx!.stroke();
+
+        ctx!.strokeStyle = colour(t, alpha);
+        ctx!.lineWidth = e.size;
+        ctx!.beginPath();
+        ctx!.moveTo(sx, sy);
+        ctx!.lineTo(e.x, e.y);
+        ctx!.stroke();
       }
-      ctx!.globalAlpha = 1;
     }
 
     function onVisibility() {
@@ -177,7 +269,7 @@ export default function EmberField() {
     observer.observe(document.body, { childList: true, subtree: true });
 
     window.addEventListener("resize", resize);
-    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener(IGNITE_EVENT, onIgnite);
     document.addEventListener("visibilitychange", onVisibility);
     frame = requestAnimationFrame(tick);
 
@@ -185,25 +277,10 @@ export default function EmberField() {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("resize", resize);
-      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener(IGNITE_EVENT, onIgnite);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
   return <canvas ref={canvasRef} aria-hidden="true" className="ember-field" />;
-}
-
-function makeSprite(core: string, edge: string) {
-  const size = 32;
-  const c = document.createElement("canvas");
-  c.width = c.height = size;
-  const g = c.getContext("2d")!;
-  const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, `rgba(${core},1)`);
-  grad.addColorStop(0.18, `rgba(${core},0.95)`);
-  grad.addColorStop(0.35, `rgba(${edge},0.55)`);
-  grad.addColorStop(1, `rgba(${edge},0)`);
-  g.fillStyle = grad;
-  g.fillRect(0, 0, size, size);
-  return c;
 }
