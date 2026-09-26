@@ -1,4 +1,5 @@
 import Skewer from "@/components/ornament/Skewer";
+import CountUp from "@/components/CountUp";
 import { shopStats } from "@/lib/content";
 
 /**
@@ -11,7 +12,12 @@ export default function StatsBand() {
   return (
     <div className="grid grid-cols-2 gap-y-10 lg:grid-cols-4">
       {shopStats.map((stat, i) => (
-        <div key={stat.label} className="relative px-4 text-center sm:px-6">
+        <div
+          key={stat.label}
+          data-reveal
+          style={{ "--reveal-delay": `${i * 120}ms` } as React.CSSProperties}
+          className="relative px-4 text-center sm:px-6"
+        >
           {/* Dividing skewer — not before the first item, and not at the
               start of a new row on the 2-up mobile grid. */}
           {i > 0 && (
@@ -25,8 +31,8 @@ export default function StatsBand() {
             </div>
           )}
 
-          <p className="font-display text-4xl font-semibold leading-none text-white sm:text-5xl">
-            {stat.figure}
+          <p className="stat-figure font-display text-4xl font-semibold leading-none text-white sm:text-6xl">
+            <CountUp figure={stat.figure} />
           </p>
           <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-white/85">
             {stat.label}

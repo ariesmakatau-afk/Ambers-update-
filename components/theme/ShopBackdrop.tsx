@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { CentaurFigure } from "@/components/ornament/Centaur";
+import CentaurWallpaper from "@/components/theme/CentaurWallpaper";
 
 /**
  * The wall the whole site hangs on: whitewash with the shop's centaur
@@ -49,30 +49,8 @@ export default function ShopBackdrop() {
     <div aria-hidden="true" className="shop-backdrop">
       <div className="shop-layer shop-wall" />
 
-      {/* The centaur wallpaper: archers in alternating rows, one row facing
-          each way, between thin ruled bands — as it hangs in the shop. */}
-      <svg className="shop-layer shop-wallpaper" width="100%" height="100%">
-        <defs>
-          <pattern id="centaur-wallpaper" width="220" height="200" patternUnits="userSpaceOnUse">
-            <g transform="translate(20 12) scale(0.62)">
-              <CentaurFigure />
-            </g>
-            <g transform="translate(200 112) scale(-0.62 0.62)">
-              <CentaurFigure />
-            </g>
-            {/* Ruled bands under each row, with a small key between */}
-            <path d="M0 88 H220 M0 92 H220" stroke="currentColor" strokeWidth="1" opacity="0.6" />
-            <path d="M0 188 H220 M0 192 H220" stroke="currentColor" strokeWidth="1" opacity="0.6" />
-            <path
-              d="M150 40 h8 v8 h-4 v-4 M40 140 h8 v8 h-4 v-4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-            />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#centaur-wallpaper)" />
-      </svg>
+      {/* The centaur wallpaper, as it hangs in the shop */}
+      <CentaurWallpaper id="centaur-wallpaper" className="shop-layer shop-wallpaper" />
 
       <div className="shop-layer shop-heat" />
     </div>

@@ -26,9 +26,9 @@ type Fountain = {
 };
 
 const MAX_EMBERS = 900;
-// The dark bands, the mobile menu and the footer are drawn as coal beds;
-// sparks rise off them.
-const COAL_SELECTOR = ".coal-bed, .footer-coals, .menu-panel--grill";
+// The home hero, the dark bands, the mobile menu and the footer are drawn
+// as coal beds; sparks rise off them.
+const COAL_SELECTOR = ".hero-fire, .coal-bed, .footer-coals, .menu-panel--grill";
 
 /**
  * Live embers over the whole site, drawn on one canvas.
@@ -162,7 +162,9 @@ export default function EmberField() {
         const r = el.getBoundingClientRect();
         if (r.bottom < 0 || r.top > height) continue;
         const bottom = Math.min(r.bottom, height + 6);
-        emitAlong(el, r.left, r.right, bottom, r.width / (narrow ? 40 : 60), dt, 80);
+        // The hero's fire is the biggest on the site, so it throws the most.
+        const boost = el.classList.contains("hero-fire") ? 2.2 : 1;
+        emitAlong(el, r.left, r.right, bottom, (r.width / (narrow ? 40 : 60)) * boost, dt, 80 * boost);
       }
 
       // The order button's fountain: heavy at first, then tailing off.

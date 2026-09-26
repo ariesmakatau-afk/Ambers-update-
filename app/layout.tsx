@@ -8,6 +8,7 @@ import StructuredData from "@/components/StructuredData";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ShopBackdrop from "@/components/theme/ShopBackdrop";
 import EmberField from "@/components/theme/EmberField";
+import RevealOnScroll from "@/components/theme/RevealOnScroll";
 import { siteMeta } from "@/lib/content";
 
 // Fraunces — a quirky, high-contrast display serif common in premium food branding.
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ShopBackdrop />
         {/* Live embers over everything (sending an order sets off a fountain) */}
         <EmberField />
+        <RevealOnScroll />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-chalk focus:px-4 focus:py-2 focus:text-cobalt"

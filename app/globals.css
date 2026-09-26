@@ -180,7 +180,7 @@
     content: "";
     position: absolute;
     inset: auto 0 0 0;
-    height: 84px;
+    height: 110px;
     z-index: -1;
     background: var(--coal-photo) center 60% / cover no-repeat;
     -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 35%, #000 70%);
@@ -534,6 +534,200 @@
     animation: vent-glow 2.4s ease-in-out infinite;
   }
 
+  /* =================================================================
+     HOME HERO — night in the shop, over the coals
+     ================================================================= */
+  .hero-fire {
+    background: theme("colors.char.DEFAULT");
+  }
+  .hero-fire__sky {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(79, 127, 192, 0.35), transparent 70%),
+      linear-gradient(180deg, #0e2a52 0%, #0b1d38 45%, #0f1115 78%);
+  }
+  /* The wallpaper, just visible in the dark. */
+  .hero-fire__paper {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    color: #ffffff;
+    opacity: 0.05;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 85%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 85%);
+  }
+  /* Heat thrown up off the coals, breathing. */
+  .hero-fire__glow {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(ellipse 85% 45% at 50% 100%, rgba(255, 110, 40, 0.55), transparent 72%),
+      radial-gradient(ellipse 45% 30% at 20% 100%, rgba(255, 140, 60, 0.35), transparent 70%),
+      radial-gradient(ellipse 45% 30% at 80% 100%, rgba(255, 140, 60, 0.35), transparent 70%);
+    animation: coal-breathe 5s ease-in-out infinite;
+  }
+  /* The coal bed itself, real charcoal across the foot of the screen. */
+  .hero-fire__coals {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 30vh;
+    min-height: 170px;
+    z-index: -1;
+    background: var(--coal-photo) center 55% / cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 30%, #000 65%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 30%, #000 65%);
+    animation: coal-glow 3.4s ease-in-out infinite;
+  }
+
+  /* The arch at night: a white line with no fill, glowing faintly. */
+  .arch-frame--night .arch-frame__opening {
+    background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(14, 42, 82, 0.55), transparent 75%);
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+  .arch-frame--night .arch-frame__opening::before {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  /* No threshold step: the arch stands straight in the fire. */
+  .arch-frame--night .arch-frame__step {
+    display: none;
+  }
+
+  /* The medallion, lit from below by the fire. */
+  .hero-medallion img {
+    border-radius: 9999px;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.25),
+      0 0 40px 6px rgba(255, 120, 50, 0.25),
+      0 30px 60px -20px rgba(0, 0, 0, 0.8);
+    animation: medallion-float 7s ease-in-out infinite;
+  }
+
+  /* Headline glowing warm at the edges, like it's in front of the fire. */
+  .hero-title {
+    text-shadow:
+      0 0 30px rgba(255, 140, 60, 0.28),
+      0 2px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* Hero content rises into place on load, one line after another. */
+  .hero-rise {
+    animation: hero-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /* "Scroll" cue: a slim capsule with a spark dropping through it. */
+  .hero-scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 3.5vh;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 38px;
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    border-radius: 9999px;
+  }
+  .hero-scroll-cue span {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 4px;
+    height: 7px;
+    margin-left: -2px;
+    border-radius: 9999px;
+    background: #ffb36a;
+    box-shadow: 0 0 8px 2px rgba(255, 120, 50, 0.6);
+    animation: scroll-cue 1.8s ease-in-out infinite;
+  }
+
+  /* Secondary button for dark grounds: frosted glass, white on hover. */
+  .btn-glass {
+    @apply relative inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold tracking-wide text-white transition-all duration-200;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+    backdrop-filter: blur(6px);
+  }
+  .btn-glass:hover {
+    @apply bg-white text-cobalt-dark;
+    transform: translateY(-1px);
+  }
+
+  /* =================================================================
+     SCROLL REVEAL (components/theme/RevealOnScroll.tsx)
+     ================================================================= */
+  .reveal-ready [data-reveal] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal-ready [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* =================================================================
+     HOME DETAILS
+     ================================================================= */
+  /* Food cards: the photo leans in and the grill under it flares. */
+  .food-card__frame {
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 18px 30px -22px rgba(14, 42, 82, 0.6);
+  }
+  .food-card__img {
+    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.6s ease;
+  }
+  .food-card:hover .food-card__img {
+    transform: scale(1.07);
+    filter: saturate(1.12) contrast(1.04);
+  }
+  .food-card .grill-ledge::after {
+    transition: box-shadow 0.4s ease;
+  }
+  .food-card:hover .grill-ledge::after {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.15) inset,
+      0 0 22px 2px rgba(255, 106, 31, 0.45),
+      0 10px 20px -10px rgba(14, 42, 82, 0.6);
+    filter: brightness(1.4);
+  }
+
+  /* Reasons and quotes: the ember rule above each one lights up on hover. */
+  .why-item,
+  .review-quote {
+    position: relative;
+  }
+  .why-item::before,
+  .review-quote::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ff9a4a, #e0521b);
+    box-shadow: 0 0 10px rgba(255, 106, 31, 0.6);
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .why-item:hover::before,
+  .review-quote:hover::before,
+  .is-revealed.why-item::before,
+  .is-revealed.review-quote::before {
+    width: 3.5rem;
+  }
+
+  /* Stat figures glow like the coals under them. */
+  .stat-figure {
+    text-shadow: 0 0 28px rgba(255, 130, 50, 0.35);
+    font-variant-numeric: tabular-nums;
+  }
+
   .container-page {
     @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
   }
@@ -589,6 +783,43 @@
   }
   50% {
     box-shadow: 0 0 14px 4px rgba(255, 130, 50, 0.7);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes medallion-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(14px);
+    opacity: 0;
   }
 }
 
@@ -651,8 +882,16 @@
   .grill-ledge::after,
   .footer-grill span,
   .eyebrow-spark::before,
-  .arch-frame__opening::after {
+  .arch-frame__opening::after,
+  .hero-fire__glow,
+  .hero-fire__coals,
+  .hero-rise,
+  .hero-medallion img,
+  .hero-scroll-cue span {
     animation: none;
+  }
+  .food-card:hover .food-card__img {
+    transform: none;
   }
   .chip-option:active,
   .qty-btn:active:not(:disabled) {

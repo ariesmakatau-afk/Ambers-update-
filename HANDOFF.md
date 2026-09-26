@@ -741,10 +741,28 @@ it that isn't blue is the charcoal. The theme is built from those three:
   air vents, like the front of the charcoal box), and the footer's top edge
   is the grill's front plate with its vents flickering.
 
+**Home page, the showpiece:**
+
+- **Hero** (`.hero-fire`): full screen, night in the shop. It has the
+  centaur wallpaper in the dark, a white arch line, the medallion lit from
+  below, and real coals across the foot of the screen with live sparks
+  streaming off them. The content rises in line by line on load, and a
+  scroll cue drops a spark.
+- **Scroll reveal:** anything with `data-reveal` rises into place the first
+  time it's seen, and `--reveal-delay` staggers a row
+  (`components/theme/RevealOnScroll.tsx`). Content is only hidden once
+  that script runs, so the page works without it.
+- **House numbers** count up when they come into view (`components/CountUp.tsx`).
+- **Food cards:** the photo leans in and the grill's vents flare on hover.
+  Reasons and quotes get an ember rule that lights up.
+- Bigger section headlines throughout, and a taller closing call to action
+  over the coals.
+
 | Element | Class / component |
 |---|---|
 | Primary button — a live coal | `.btn-coal` |
 | Secondary button — blue on white, white on blue on hover | `.btn-porcelain` |
+| Secondary button on dark grounds — frosted glass | `.btn-glass` |
 | Cards — glazed tile | `.tile-card` |
 | Greek key trims | `.key-divider`, `-ember`, `-cobalt` |
 | Section kicker with a pulsing spark | `.eyebrow-spark` |
